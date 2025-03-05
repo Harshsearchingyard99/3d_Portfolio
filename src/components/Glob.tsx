@@ -2,17 +2,23 @@
 import { useEffect, useRef, useState } from "react";
 import { Color, Scene, Fog, PerspectiveCamera, Vector3 } from "three";
 import ThreeGlobe from "three-globe";
-import { useThree, Object3DNode, Canvas, extend } from "@react-three/fiber";
-import { ReactThreeFiber } from "@react-three/fiber";
+import { useThree, Canvas, extend } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import countries from "@/data/globe.json";
+
+// 🛠 FIX: Custom Object3DNode Type Define Karo
 declare module "@react-three/fiber" {
-    interface ThreeElements {
-      threeGlobe: ReactThreeFiber.Node<ThreeGlobe, typeof ThreeGlobe>;
-    }
+  interface Object3DNode<T, U extends new (...args: any) => any> {
+    args?: ConstructorParameters<U>;
   }
 
-extend({ ThreeGlobe });
+  interface ThreeElements {
+    threeGlobe: Object3DNode<ThreeGlobe, typeof ThreeGlobe>;
+  }
+}
+
+// 🛠 FIX: `extend({ ThreeGlobe })` me lowercase `threeGlobe` ka use karo
+extend({ threeGlobe: ThreeGlobe });
 
 const RING_PROPAGATION_SPEED = 3;
 const aspect = 1.2;
@@ -158,7 +164,7 @@ export function Globe({ globeConfig, data }: WorldProps) {
         .showAtmosphere(defaultProps.showAtmosphere)
         .atmosphereColor(defaultProps.atmosphereColor)
         .atmosphereAltitude(defaultProps.atmosphereAltitude)
-        .hexPolygonColor((e) => {
+        .hexPolygonColor(() => {
           return defaultProps.polygonColor;
         });
       startAnimation();
@@ -178,13 +184,13 @@ export function Globe({ globeConfig, data }: WorldProps) {
       .arcAltitude((e) => {
         return (e as { arcAlt: number }).arcAlt * 1;
       })
-      .arcStroke((e) => {
+      .arcStroke(() => {
         return [0.32, 0.28, 0.3][Math.round(Math.random() * 2)];
       })
       .arcDashLength(defaultProps.arcLength)
       .arcDashInitialGap((e) => (e as { order: number }).order * 1)
       .arcDashGap(15)
-      .arcDashAnimateTime((e) => defaultProps.arcTime);
+      .arcDashAnimateTime(() => defaultProps.arcTime);
 
     globeRef.current
       .pointsData(data)
